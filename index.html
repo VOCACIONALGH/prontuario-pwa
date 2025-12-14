@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+
+    <!-- MOBILE -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- PWA -->
+    <title>Prontuário Eletrônico</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#007BFF">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f4f4f4;
+            padding: 20px;
+        }
+
+        h1, h2 {
+            color: #333;
+        }
+
+        .container {
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            max-width: 800px;
+            margin: auto;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+
+        label {
+            display: block;
+            margin-top: 10px;
+            font-weight: bold;
+        }
+
+        input, textarea, button {
+            width: 100%;
+            padding: 10px;
+            margin-top: 5px;
+            font-size: 16px;
+        }
+
+        textarea {
+            resize: vertical;
+        }
+
+        button {
+            margin-top: 15px;
+            cursor: pointer;
+            background: #007BFF;
+            color: white;
+            border: none;
+            border-radius: 6px;
+        }
+
+        button:hover {
+            background: #0056b3;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .campo {
+            margin-bottom: 10px;
+        }
+
+        .prontuario {
+            border: 1px solid #ccc;
+            padding: 10px;
+            margin-top: 10px;
+            border-radius: 5px;
+            background: #fafafa;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Prontuário Eletrônico</h1>
+
+    <button onclick="mostrarAdministrador()">Modo Administrador</button>
+    <button onclick="mostrarUsuario()">Modo Usuário</button>
+
+    <div id="admin" class="hidden">
+        <h2>Modo Administrador</h2>
+
+        <label>Nome do Tutor</label>
+        <input type="text" id="tutor">
+
+        <label>Senha do Tutor</label>
+        <input type="password" id="senhaTutor">
+
+        <label>Nome do Paciente</label>
+        <input type="text" id="paciente">
+
+        <label>Queixa</label>
+        <textarea id="queixa"></textarea>
+
+        <label>Tratamento Realizado</label>
+        <textarea id="tratamento"></textarea>
+
+        <label>Resultado do Tratamento</label>
+        <textarea id="resultado"></textarea>
+
+        <label>Orientações ao Tutor</label>
+        <textarea id="orientacoes"></textarea>
+
+        <button onclick="salvarProntuario()">Salvar Prontuário</button>
+    </div>
+
+    <div id="usuario" class="hidden">
+        <h2>Modo Usuário</h2>
+
+        <label>Nome do Tutor</label>
+        <input type="text" id="buscaTutor">
+
+        <label>Senha</label>
+        <input type="password" id="buscaSenha">
+
+        <button onclick="carregarProntuariosTutor()">Acessar Prontuários</button>
+
+        <div id="listaProntuarios"></div>
+    </div>
+</div>
+
+<script>
+    function mostrarAdministrador() {
+        document.getElementById("admin").classList.remove("hidden");
+        document.getElementById("usuario").classList.add("hidden");
+    }
+
+    function mostrarUsuario() {
+        document.getElementById("admin").classList.add("hidden");
+        document.getElementById("usuario").classList.remove("hidden");
+        document.getElementById("listaProntuarios").innerHTML = "";
+    }
+
+    function salvarProntuario() {
+        const tutor = document.getElementById("tutor").value;
+        const senhaTutor = document.getElementById("senhaTutor").value;
+
+        let senhas = JSON.parse(localStorage.getItem("senhasTutor")) || {};
+        if (!senhas[tutor]) {
+            senhas[tutor] = senhaTutor;
+            localStorage.setItem("senhasTutor", JSON.stringify(senhas));
+        }
+
+        const prontuario = {
+            tutor,
+            paciente: paciente.value,
+            queixa: queixa.value,
+            tratamento: tratamento.value,
+            resultado: resultado.value,
+            orientacoes: orientacoes.value
+        };
+
+        let prontuarios = JSON.parse(localStorage.getItem("prontuarios")) || [];
+        prontuarios.push(prontuario);
+        localStorage.setItem("prontuarios", JSON.stringify(prontuarios));
+
+        alert("Prontuário salvo!");
+    }
+
+    function carregarProntuariosTutor() {
+        const nomeTutor = buscaTutor.value.trim();
+        const senha = buscaSenha.value;
+        const lista = document.getElementById("listaProntuarios");
+        lista.innerHTML = "";
+
+        const senhas = JSON.parse(localStorage.getItem("senhasTutor")) || {};
+        if (senhas[nomeTutor] !== senha) {
+            alert("Acesso negado.");
+            return;
+        }
+
+        const prontuarios = JSON.parse(localStorage.getItem("prontuarios")) || [];
+        prontuarios.filter(p => p.tutor === nomeTutor).forEach(p => {
+            lista.innerHTML += `
+                <div class="prontuario">
+                    <strong>Paciente:</strong> ${p.paciente}<br>
+                    <strong>Queixa:</strong> ${p.queixa}<br>
+                    <strong>Tratamento:</strong> ${p.tratamento}<br>
+                    <strong>Resultado:</strong> ${p.resultado}<br>
+                    <strong>Orientações:</strong> ${p.orientacoes}
+                </div>
+            `;
+        });
+    }
+
+    // REGISTRO DO SERVICE WORKER (PWA)
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('sw.js');
+    }
+</script>
+
+</body>
+</html>
